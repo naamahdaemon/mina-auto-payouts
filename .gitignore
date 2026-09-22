@@ -1,0 +1,26 @@
+# Local configuration
+.env
+.env.*
+auto-payout.conf
+.msmtprc
+
+# Keys
+*.gpg
+*.key
+*.pem
+gpg_keys/
+
+# Runtime state and payout data
+.auto-payout/
+src/data/
+*.log
+*.tar.gz
+
+# Local files
+node_modules/
+__pycache__/
+*.pyc
+*.bak
+*.old
+*~
+.DS_Store

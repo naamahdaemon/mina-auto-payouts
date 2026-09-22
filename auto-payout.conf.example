@@ -1,0 +1,30 @@
+# Template only: replace all placeholders before use.
+# Mina block producer
+BP_PUBLIC_KEY="B62***BP"
+
+# Dedicated automatic payout wallet
+PAYOUT_PUBLIC_KEY="B62***PAYOUTS"
+
+# Current mina-pool-payout fork / era
+FORK="<FORK>"
+
+# Commission settings
+POOL_COMMISSION="<POOL_COMMISSION>"
+O1_COMMISSION="<O1_COMMISSION>"
+
+# Memo prefix
+POOL_MEMO_PREFIX="<POOL_MEMO_PREFIX>"
+
+# Permanent balance kept after every completed batch
+PAYOUT_RESERVE_MINA="<RESERVE_MINA>"
+
+# Local Mina GraphQL endpoint
+GRAPHQL_ENDPOINT="http://127.0.0.1:3085/graphql"
+
+# Email reports
+MAIL_TO="operator@example.com"
+MAIL_FROM="sender@example.com"
+MAIL_SUBJECT_PREFIX="[Mina payout]"
+
+# Optional explicit sendmail-compatible binary
+SENDMAIL_BIN="/usr/sbin/sendmail"

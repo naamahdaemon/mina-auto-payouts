@@ -1,0 +1,10 @@
+[Unit]
+Description=Mina automatic payout orchestrator
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/mina-scripts/payouts/mina-pool-payout
+Environment=GNUPGHOME=%h/.gnupg
+ExecStart=%h/mina-scripts/payouts/mina-pool-payout/auto-payout.sh
+StandardOutput=journal
+StandardError=journal
