@@ -1,40 +1,40 @@
-# Quick setup — du premier lancement au premier payout
+# Quick setup — from first launch to first payout
 
-**7 étapes, puis une seule action par epoch : alimenter le wallet au montant indiqué dans le mail.** Exemple fictif : 100 MINA de payouts, 0,010 MINA de frais, 1 MINA de réserve. Les adresses `B62***…` et les adresses mail ci-dessous sont à remplacer.
+**7 steps, then one action per epoch: fund the wallet with the amount shown in the email.** Illustrative example: 100 MINA in payouts, 0.010 MINA in fees, and a 1 MINA reserve. Replace the `B62***…` addresses and email addresses below with your own.
 
 ```text
-Epoch terminée → mail « fund 100.010000000 MINA »
-              → tu alimentes le wallet
-              → envoi automatique → mail « COMPLETED OK »
+Epoch completed → email: "fund 100.010000000 MINA"
+                → you fund the wallet
+                → automatic submission → email: "COMPLETED OK"
 ```
 
-## 1. Partir d'un moteur Mina Pool Payout opérationnel
+## 1. Start with a working Mina Pool Payout engine
 
-Ce raccourci suppose un daemon synchronisé, Node/npm et un `mina-pool-payout` déjà configuré avec son `.env` et son historique `.paidblocks`. Pour une nouvelle installation, suivre d'abord les sections 5 à 10 du [README](README.md). Le moteur de référence est la version 1.7.4, commit `12ebcce`.
+This quick guide assumes a synced daemon, Node/npm, and an existing `mina-pool-payout` installation with its `.env` configuration and `.paidblocks` history. For a fresh installation, complete sections 5–10 of the [README](README.md) first. The reference engine is version 1.7.4, commit `12ebcce`.
 
 ```bash
 cd "$HOME/mina-scripts/payouts/mina-pool-payout"
 npm run payout -- --help
 ps -p 1 -o comm=
-# Attendu : l'aide du moteur, puis systemd
+# Expected: engine help, then systemd
 
 sudo apt update
 sudo apt install curl jq python3 util-linux gnupg pinentry-curses \
   msmtp msmtp-mta ca-certificates git
 ```
 
-Sous WSL2, si la dernière commande de vérification n'affiche pas `systemd`, appliquer la section 6 du README. L'automatisation ne tourne que lorsque Linux/WSL et le daemon sont en marche.
+On WSL2, if `ps -p 1 -o comm=` does not print `systemd`, follow section 6 of the README. Automation runs only while Linux/WSL and the daemon are running.
 
 ```bash
 curl -fsS http://127.0.0.1:3085/graphql \
   -H 'Content-Type: application/json' \
   --data '{"query":"{ syncStatus }"}' | jq -r '.data.syncStatus'
-# Attendu : SYNCED
+# Expected: SYNCED
 ```
 
-## 2. Installer le wrapper et renseigner ses paramètres
+## 2. Install and configure the wrapper
 
-Pour une première installation, télécharger le wrapper et copier ses trois scripts à côté du moteur. Si le wrapper est déjà cloné, commencer à `cd`. Pour une mise à jour d'une automatisation existante, utiliser la section 39 du README.
+For a first installation, download the wrapper and copy its three scripts into the engine directory. If you have already cloned the wrapper, start at `cd`. To upgrade an existing automation setup, follow section 39 of the README.
 
 ```bash
 git clone https://github.com/naamahdaemon/mina-auto-payouts.git "$HOME/mina-auto-payouts"
@@ -48,24 +48,24 @@ chmod 600 auto-payout.conf
 nano auto-payout.conf
 ```
 
-Exemple de configuration : remplacer les deux adresses Mina, les mails et le fork ; conserver tes véritables commissions. Les taux ci-dessous sont uniquement illustratifs. Utiliser un wallet dédié, déjà créé sur la chaîne, dont tu détiens la clé privée ; dans cet exemple son solde initial est de 1 MINA.
+Example configuration: replace both Mina addresses, the email addresses, and the fork; use your actual commission rates. The rates below are illustrative only. Use a dedicated wallet that already exists on-chain and whose private key you control; in this example, its starting balance is 1 MINA.
 
 ```bash
-BP_PUBLIC_KEY="B62***TON_BLOCK_PRODUCER"
-PAYOUT_PUBLIC_KEY="B62***TON_WALLET_PAYOUT"
-FORK="<TON_FORK_ACTUEL>"
+BP_PUBLIC_KEY="B62***YOUR_BLOCK_PRODUCER"
+PAYOUT_PUBLIC_KEY="B62***YOUR_PAYOUT_WALLET"
+FORK="<YOUR_CURRENT_FORK>"
 POOL_COMMISSION="0.05"
 O1_COMMISSION="0.08"
-POOL_MEMO_PREFIX="MonPool_"
+POOL_MEMO_PREFIX="MyPool_"
 PAYOUT_RESERVE_MINA="1"
 GRAPHQL_ENDPOINT="http://127.0.0.1:3085/graphql"
-MAIL_TO="toi@example.com"
-MAIL_FROM="ton.compte@gmail.com"
+MAIL_TO="you@example.com"
+MAIL_FROM="your.account@gmail.com"
 MAIL_SUBJECT_PREFIX="[Mina payout]"
 SENDMAIL_BIN="/usr/sbin/sendmail"
 ```
 
-Dans le `.env` du moteur, vérifier ces paramètres, en conservant les autres réglages de ton pool. Le wrapper fournit la clé privée uniquement au moment de l'exécution.
+Check these settings in the engine's `.env`, keeping your other pool settings. The wrapper supplies the private key only when executing the payout.
 
 ```bash
 nano .env
@@ -79,13 +79,13 @@ DO_NOT_SAVE_TRANSACTION_DETAILS=FALSE
 SEND_PAYMENT_GRAPHQL_ENDPOINT=http://127.0.0.1:3085/graphql
 ```
 
-## 3. Préparer la clé du wallet de payout
+## 3. Prepare the payout wallet key
 
-Chiffrer la clé privée du **wallet de payout**, avec une phrase secrète GPG. Le nom `encrypted_key.gpg` est obligatoire. Si ce fichier existe déjà pour le bon wallet, passer directement au déverrouillage ; ne pas l'écraser.
+Encrypt the **payout wallet** private key using a GPG passphrase. The filename must be `encrypted_key.gpg`. If this file already exists for the correct wallet, skip encryption and proceed to unlocking; do not overwrite it.
 
 ```bash
 cd "$HOME/mina-scripts/payouts/mina-pool-payout"
-read -s -r -p 'Clé privée du wallet de payout : ' PRIVATE_KEY
+read -s -r -p 'Payout wallet private key: ' PRIVATE_KEY
 echo
 printf '%s' "$PRIVATE_KEY" | gpg --symmetric --cipher-algo AES256 \
   --output encrypted_key.gpg
@@ -93,7 +93,7 @@ unset PRIVATE_KEY
 chmod 600 encrypted_key.gpg
 ```
 
-Configurer le cache GPG en ajoutant ces lignes à `~/.gnupg/gpg-agent.conf` (ou en adaptant les valeurs existantes). Cela évite une demande de phrase secrète à chaque passage du timer.
+Configure the GPG cache by adding these lines to `~/.gnupg/gpg-agent.conf` (or adjusting existing values). This keeps the passphrase available across timer runs.
 
 ```bash
 mkdir -p "$HOME/.gnupg"
@@ -107,7 +107,7 @@ max-cache-ttl 2592000
 pinentry-program /usr/bin/pinentry-curses
 ```
 
-Déverrouiller la clé, puis vérifier qu'elle est accessible sans dialogue. Après un redémarrage ou une expiration du cache, refaire ce déverrouillage : le wrapper attendra jusque-là.
+Unlock the key, then check that it can be accessed without an interactive prompt. After a reboot or cache expiration, unlock it again: the wrapper will wait until you do.
 
 ```bash
 gpgconf --kill gpg-agent
@@ -115,12 +115,12 @@ export GPG_TTY=$(tty)
 gpg --decrypt encrypted_key.gpg >/dev/null
 gpg --batch --pinentry-mode error --decrypt encrypted_key.gpg >/dev/null \
   && echo 'GPG OK'
-# Attendu : GPG OK
+# Expected: GPG OK
 ```
 
-## 4. Activer et tester les mails
+## 4. Set up and test email notifications
 
-Exemple Gmail : utiliser un mot de passe d'application Google pour le compte expéditeur (voir section 13 du README). Créer le fichier avec des permissions privées avant de saisir ce mot de passe.
+Gmail example: use a Google App Password for the sending account (see section 13 of the README). Create the file with private permissions before entering that password.
 
 ```bash
 (umask 077; touch "$HOME/.msmtprc")
@@ -139,28 +139,28 @@ timeout 30
 account gmail
 host smtp.gmail.com
 port 587
-from ton.compte@gmail.com
-user ton.compte@gmail.com
-password TON_MOT_DE_PASSE_APPLICATION_GOOGLE
+from your.account@gmail.com
+user your.account@gmail.com
+password YOUR_GOOGLE_APP_PASSWORD
 
 account default : gmail
 ```
 
-Envoyer un mail de test à l'adresse configurée dans `MAIL_TO`. Continuer après sa réception, en vérifiant aussi les indésirables.
+Send a test email to the address configured in `MAIL_TO`. Continue once it arrives; check your spam folder too.
 
 ```bash
-printf 'Subject: Test Mina payouts\n\nLes notifications fonctionnent.\n' \
-  | timeout 20s sendmail toi@example.com
+printf 'Subject: Mina payouts test\n\nNotifications are working.\n' \
+  | timeout 20s sendmail you@example.com
 ```
 
 ```text
-Objet : Test Mina payouts
-Les notifications fonctionnent.
+Subject: Mina payouts test
+Notifications are working.
 ```
 
-## 5. Démarrer la surveillance automatique
+## 5. Start automatic monitoring
 
-Installer le service et le timer. Le service fourni convient à Node/npm installé globalement ; la variante NVM est juste après. Le timer vérifie la situation toutes les 10 minutes.
+Install the service and timer. The supplied service works with globally installed Node/npm; the NVM variant is shown below. The timer checks payout state every 10 minutes.
 
 ```bash
 mkdir -p "$HOME/.config/systemd/user"
@@ -170,7 +170,7 @@ cp "$HOME/mina-auto-payouts/mina-auto-payout.service" \
 command -v npm
 ```
 
-Si le résultat contient `.nvm`, remplacer le contenu du service par la variante suivante. Sinon, conserver le fichier fourni.
+If the output contains `.nvm`, replace the service contents with the following variant. Otherwise, keep the supplied file.
 
 ```bash
 nano "$HOME/.config/systemd/user/mina-auto-payout.service"
@@ -189,40 +189,40 @@ StandardOutput=journal
 StandardError=journal
 ```
 
-Tester GPG dans le contexte systemd, puis lancer le service et activer le timer. **Dès ce lancement, un batch financé exactement peut être exécuté.** Éviter tout payout manuel concurrent avec ce wallet.
+Test GPG in the systemd context, then start the service and enable the timer. **Once started, the automation may execute an exactly funded batch.** Do not run manual payouts concurrently from this wallet.
 
 ```bash
 systemd-run --user --wait --pipe /bin/bash -lc \
   'gpg --batch --pinentry-mode error --decrypt "$HOME/mina-scripts/payouts/mina-pool-payout/encrypted_key.gpg" >/dev/null'
-# Attendu : code de sortie 0 ; sinon revenir à l'étape 3.
+# Expected: exit code 0; otherwise return to step 3.
 
 sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
 systemctl --user start mina-auto-payout.service
 journalctl --user -u mina-auto-payout.service -n 30 --no-pager
-# Corriger toute erreur avant de continuer.
+# Resolve any errors before continuing.
 systemctl --user enable --now mina-auto-payout.timer
 systemctl --user list-timers mina-auto-payout.timer
-# Attendu : une prochaine exécution planifiée.
+# Expected: a scheduled next run.
 ```
 
-Si l'epoch n'est pas encore entièrement payable, le wrapper attend ; aucun financement n'est demandé. Exemple de sortie, avec des hauteurs fictives :
+If the epoch is not fully payable yet, the wrapper waits and does not request funding. Example output for an illustrative epoch:
 
 ```text
 Epoch 80 is complete but not fully confirmed yet.
 ```
 
-## 6. Recevoir le mail et alimenter le wallet
+## 6. Receive the email and fund the wallet
 
-Une fois l'epoch payable, tu reçois un rapport. Voici un **extrait fictif**, avec les mêmes champs que le mail réel : 10 transactions totalisent 100 MINA, avec 0,010 MINA de frais ; le wallet contient déjà sa réserve de 1 MINA.
+Once the epoch is payable, you receive a report. This **illustrative excerpt** uses the same fields as the actual email: 10 transactions total 100 MINA, with 0.010 MINA in fees; the wallet already holds its 1 MINA reserve.
 
 ```text
-Objet : [Mina payout] epoch 80 - WAITING_FOR_FUNDING - fund 100.010000000 MINA
+Subject: [Mina payout] epoch 80 - WAITING_FOR_FUNDING - fund 100.010000000 MINA
 
 Mina Pool Payout - PRE-FUNDING REPORT
 Status:                 WAITING_FOR_FUNDING
 Payout wallet:
-B62***TON_WALLET_PAYOUT
+B62***YOUR_PAYOUT_WALLET
 
 Transactions:           10
 Payout amounts:         100.000000000 MINA
@@ -237,19 +237,19 @@ TO FUND NOW:            100.010000000 MINA
 EXPECTED AFTER PAYOUT:  1.000000000 MINA
 ```
 
-Depuis ton wallet habituel, faire **un transfert du montant `TO FUND NOW`**, vers l'adresse du rapport. Le montant reçu doit être exact ; les frais du transfert de financement sont payés en plus depuis le wallet émetteur. Utiliser le dernier rapport et vérifier qu'aucun autre transfert n'a changé le solde depuis son calcul.
+From your usual wallet, **transfer the `TO FUND NOW` amount** to the address in the report. The amount received must be exact; pay the funding transfer fee separately from the sending wallet. Use the latest report and check that no other transfer has changed the balance since it was calculated.
 
 ```text
-Dans ton application de wallet → Envoyer
-Destinataire : adresse complète du payout wallet indiquée dans le mail
-Montant     : 100.010000000 MINA
-Frais       : en plus, à la charge du wallet émetteur
+In your wallet app → Send
+Recipient : full payout wallet address shown in the email
+Amount    : 100.010000000 MINA
+Fee       : paid separately by the sending wallet
 
-Solde du payout wallet après réception :
+Payout wallet balance after receipt:
 1.000000000 + 100.010000000 = 101.010000000 MINA
 ```
 
-Il n'y a ensuite aucune commande d'envoi à lancer : au prochain passage, le wrapper vérifie le solde, GPG et les autres conditions, puis soumet les transactions. Tu peux regarder les messages avec :
+No submission command is needed: on the next run, the wrapper checks the balance, GPG, and the other conditions, then submits the transactions. View its messages with:
 
 ```bash
 journalctl --user -u mina-auto-payout.service -n 30 --no-pager
@@ -259,19 +259,19 @@ journalctl --user -u mina-auto-payout.service -n 30 --no-pager
 SUBMITTED_WAITING_CONFIRMATION: epoch80_...
 ```
 
-## 7. Recevoir la confirmation et laisser tourner
+## 7. Receive confirmation and leave it running
 
-Après soumission, un premier mail annonce l'attente de confirmation. Quand les contrôles de nonce, de transactions en attente et de solde final passent, un second annonce la réussite. Extraits fictifs :
+After submission, an email announces that confirmation is pending. Once the nonce, pending transaction, and final balance checks pass, another email announces success. Illustrative excerpts:
 
 ```text
-Objet : [Mina payout] epoch 80 - submitted, awaiting confirmation
+Subject: [Mina payout] epoch 80 - submitted, awaiting confirmation
 Mina Pool Payout - SUBMITTED
 Transactions:            10
 The batch will NOT be executed again.
 ```
 
 ```text
-Objet : [Mina payout] epoch 80 - COMPLETED OK
+Subject: [Mina payout] epoch 80 - COMPLETED OK
 Mina Pool Payout - COMPLETED OK
 Transactions:            10
 Final wallet balance:    1.000000000 MINA
@@ -280,23 +280,23 @@ Pending transactions:    0
 RESULT: COMPLETED_OK
 ```
 
-Le wallet conserve sa réserve et le wrapper attend l'epoch suivante. Pour vérifier l'epoch terminée et la prochaine surveillance :
+The wallet keeps its reserve and the wrapper waits for the next epoch. Check the completed epoch and the next scheduled run with:
 
 ```bash
 cd "$HOME/mina-scripts/payouts/mina-pool-payout"
 cat .auto-payout/last_processed_epoch
-# Dans cet exemple : 80
+# In this example: 80
 systemctl --user list-timers mina-auto-payout.timer
 ```
 
-Si tu reçois `GPG key locked`, déverrouiller la clé et laisser le timer reprendre. Pour `RESEND REQUIRED`, un solde trop élevé ou une autre anomalie, arrêter le timer et suivre les sections 26 à 29 du README : ne pas supprimer `.paidblocks` ou relancer un batch déjà signé.
+If you receive `GPG key locked`, unlock the key and let the timer resume. For `RESEND REQUIRED`, an excessive balance, or another anomaly, stop the timer and follow sections 26–29 of the README: do not delete `.paidblocks` or rerun a batch that has already been signed.
 
 ```bash
-# GPG verrouillé :
+# GPG locked:
 gpg --decrypt "$HOME/mina-scripts/payouts/mina-pool-payout/encrypted_key.gpg" >/dev/null
 
-# Autre anomalie : arrêter les prochains déclenchements et lire les logs.
-# Cela n'interrompt pas un service déjà en cours d'exécution.
+# Other anomaly: stop future timer runs and inspect the logs.
+# This does not interrupt a service that is already running.
 systemctl --user stop mina-auto-payout.timer
 journalctl --user -u mina-auto-payout.service -n 100 --no-pager
 ```

@@ -3,7 +3,7 @@
 Secure automation layer for Mina block producer payouts using the original
 [`mina-pool-payout`](https://github.com/jrwashburn/mina-pool-payout) calculation engine.
 
-**Start here:** [Quick setup guide (Français)](QUICKSTART.md) — 7 steps, copyable commands,
+**Start here:** [Quick setup guide](QUICKSTART.md) — 7 steps, copyable commands,
 example emails and an end-to-end wallet funding example.
 
 Supported environments:
