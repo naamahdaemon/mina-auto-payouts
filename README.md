@@ -2709,3 +2709,13 @@ time() - mina_payout_metrics_collection_timestamp_seconds > 180
 
 A never-created output also needs an absence alert. End-to-end refresh latency
 includes the cron interval, Prometheus scrape interval and Grafana refresh.
+
+## Grafana overview panel
+
+An importable overview is available in [`grafana/`](grafana/README.md), with
+an English Stat panel for payout status, confirmation progress, transactions,
+wallet nonces/balance and collection health. Import the
+[one-panel dashboard](grafana/mina-payout-dashboard.json) and select your
+Prometheus datasource, job and instance, or use the
+[standalone panel JSON](grafana/mina-payout-panel.json) in an existing dashboard.
+See the [import instructions](grafana/README.md) for both options.

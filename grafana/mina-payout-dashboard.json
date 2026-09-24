@@ -1,0 +1,777 @@
+{
+  "id": null,
+  "uid": null,
+  "title": "Mina payout overview",
+  "tags": [
+    "mina",
+    "payouts",
+    "node-exporter"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "label": "Prometheus",
+        "type": "datasource",
+        "query": "prometheus",
+        "refresh": 1
+      },
+      {
+        "name": "job",
+        "label": "Job",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "query": {
+          "query": "label_values(mina_payout_metrics_collection_timestamp_seconds, job)",
+          "refId": "job"
+        },
+        "definition": "label_values(mina_payout_metrics_collection_timestamp_seconds, job)",
+        "refresh": 1,
+        "sort": 1,
+        "multi": false,
+        "includeAll": false
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "query": {
+          "query": "label_values(mina_payout_metrics_collection_timestamp_seconds{job=\"$job\"}, instance)",
+          "refId": "instance"
+        },
+        "definition": "label_values(mina_payout_metrics_collection_timestamp_seconds{job=\"$job\"}, instance)",
+        "refresh": 1,
+        "sort": 1,
+        "multi": false,
+        "includeAll": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Mina payouts \u2014 $instance",
+      "description": "Active batch, otherwise last completed batch. Confirmations are estimated from consumed nonces on a dedicated wallet. 100% is not a substitute for COMPLETED_OK. Next position is an ordinal, not a percentage. Values older than 180 seconds are hidden; collection age remains visible. Funding remaining is absent after signing starts. No data is not zero.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "unit": "none",
+          "noValue": "N/A",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Epoch"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Status"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Idle",
+                        "color": "text",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Waiting For Funding",
+                        "color": "blue",
+                        "index": 1
+                      },
+                      "2": {
+                        "text": "Funded Ready For Execution",
+                        "color": "blue",
+                        "index": 2
+                      },
+                      "3": {
+                        "text": "Signed Attempt Started",
+                        "color": "blue",
+                        "index": 3
+                      },
+                      "4": {
+                        "text": "Submitted Waiting Confirmation",
+                        "color": "blue",
+                        "index": 4
+                      },
+                      "5": {
+                        "text": "Completed Ok",
+                        "color": "green",
+                        "index": 5
+                      },
+                      "6": {
+                        "text": "Blocked Pending Transaction",
+                        "color": "orange",
+                        "index": 6
+                      },
+                      "7": {
+                        "text": "Blocked Balance Above Target",
+                        "color": "red",
+                        "index": 7
+                      },
+                      "8": {
+                        "text": "Blocked Gpg Locked",
+                        "color": "orange",
+                        "index": 8
+                      },
+                      "9": {
+                        "text": "Manual Intervention Required",
+                        "color": "red",
+                        "index": 9
+                      },
+                      "10": {
+                        "text": "Hash Mismatch",
+                        "color": "red",
+                        "index": 10
+                      },
+                      "11": {
+                        "text": "Signed Attempt Unknown",
+                        "color": "red",
+                        "index": 11
+                      },
+                      "12": {
+                        "text": "Test Discarded",
+                        "color": "orange",
+                        "index": 12
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "C"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Confirmed progress"
+              },
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "blue",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 100
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "D"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Confirmed transactions"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "E"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Planned transactions"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "F"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Next awaiting confirmation"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "All confirmed"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "G"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Wallet nonce"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "H"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Inferred nonce"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "I"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Pending transactions"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "J"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Wallet balance"
+              },
+              {
+                "id": "unit",
+                "value": "suffix: MINA"
+              },
+              {
+                "id": "decimals",
+                "value": 9
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "K"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Funding remaining"
+              },
+              {
+                "id": "unit",
+                "value": "suffix: MINA"
+              },
+              {
+                "id": "decimals",
+                "value": 9
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "L"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Last completed epoch"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "M"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Last completion"
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "N"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Collection health"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Collection error",
+                        "color": "red"
+                      },
+                      "1": {
+                        "text": "OK",
+                        "color": "green"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "O"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Collection age"
+              },
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 180
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "mina_payout_epoch{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Epoch"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "max without(status) ((mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"IDLE\"} * 0) or (mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"WAITING_FOR_FUNDING\"} * 1) or (mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"FUNDED_READY_FOR_EXECUTION\"} * 2) or (mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"SIGNED_ATTEMPT_STARTED\"} * 3) or (mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"SUBMITTED_WAITING_CONFIRMATION\"} * 4) or (mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"COMPLETED_OK\"} * 5) or (mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"BLOCKED_PENDING_TRANSACTION\"} * 6) or (mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"BLOCKED_BALANCE_ABOVE_TARGET\"} * 7) or (mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"BLOCKED_GPG_LOCKED\"} * 8) or (mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"MANUAL_INTERVENTION_REQUIRED\"} * 9) or (mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"HASH_MISMATCH\"} * 10) or (mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"SIGNED_ATTEMPT_UNKNOWN\"} * 11) or (mina_payout_status{job=\"$job\",instance=\"$instance\",status=\"TEST_DISCARDED\"} * 12)) and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Status"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "mina_payout_progress_percent{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Confirmed progress"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "mina_payout_transactions_confirmed{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Confirmed transactions"
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "mina_payout_transactions_total{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Planned transactions"
+        },
+        {
+          "refId": "F",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "mina_payout_next_transaction_position{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Next awaiting confirmation"
+        },
+        {
+          "refId": "G",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "mina_payout_wallet_nonce{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Wallet nonce"
+        },
+        {
+          "refId": "H",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "mina_payout_wallet_inferred_nonce{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Inferred nonce"
+        },
+        {
+          "refId": "I",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "mina_payout_wallet_pending_transactions{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Pending transactions"
+        },
+        {
+          "refId": "J",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "mina_payout_wallet_balance_mina{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Wallet balance"
+        },
+        {
+          "refId": "K",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "mina_payout_funding_remaining_mina{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Funding remaining"
+        },
+        {
+          "refId": "L",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "mina_payout_last_completed_epoch{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Last completed epoch"
+        },
+        {
+          "refId": "M",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "(mina_payout_last_completed_timestamp_seconds{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)) * 1000",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Last completion"
+        },
+        {
+          "refId": "N",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "mina_payout_metrics_collection_success{job=\"$job\",instance=\"$instance\"} and on(job, instance) (time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"} < 180)",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Collection health"
+        },
+        {
+          "refId": "O",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "time() - mina_payout_metrics_collection_timestamp_seconds{job=\"$job\",instance=\"$instance\"}",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "Collection age"
+        }
+      ]
+    }
+  ],
+  "annotations": {
+    "list": []
+  }
+}
