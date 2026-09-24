@@ -2601,3 +2601,105 @@ Payout calculation and transaction submission are provided by
 [`mina-pool-payout`](https://github.com/jrwashburn/mina-pool-payout),
 maintained by jrwashburn and its contributors. The engine is installed
 separately and retains its own license.
+
+---
+
+# Optional node_exporter payout metrics
+
+[`mina-payout-metrics.sh`](mina-payout-metrics.sh) is a standalone, read-only
+collector for a cron job on the payout machine. It needs Bash, Python 3,
+`curl` and `flock`, with no Python packages. Python is embedded in the shell
+script; only this one file needs installing. It never starts a payout,
+loads private keys, or changes payout state.
+
+Install the script (example for user `thomas`):
+
+```bash
+sudo install -m 755 mina-payout-metrics.sh /var/lib/node_exporter/mina-payout-metrics.sh
+```
+
+The existing `/var/lib/node_exporter/textfile_collector` directory must be
+writable by `thomas` and readable/traversable by node_exporter. Keep the
+private payout state permissions unchanged. Test as `thomas`:
+
+```bash
+/var/lib/node_exporter/mina-payout-metrics.sh \
+  /home/thomas/mina-scripts/payouts/mina-pool-payout \
+  /var/lib/node_exporter/textfile_collector/mina_payout.prom \
+  http://127.0.0.1:3085/graphql
+cat /var/lib/node_exporter/textfile_collector/mina_payout.prom
+```
+
+Add to **thomas's crontab** with `crontab -e`:
+
+```cron
+* * * * * /var/lib/node_exporter/mina-payout-metrics.sh /home/thomas/mina-scripts/payouts/mina-pool-payout /var/lib/node_exporter/textfile_collector/mina_payout.prom http://127.0.0.1:3085/graphql
+```
+
+The three optional positional arguments are engine directory, output file,
+and GraphQL URL. Their defaults are `$HOME/mina-scripts/payouts/mina-pool-payout`,
+`/var/lib/node_exporter/textfile_collector/mina_payout.prom`, and
+`http://127.0.0.1:3085/graphql`. The URL must match your installation; the
+collector does not source `auto-payout.conf`. The wallet comes from the selected
+batch. Optionally set `PAYOUT_PUBLIC_KEY` to query a wallet before any batch
+exists; a mismatch with a selected batch is reported as an error.
+
+The collector selects the active batch, otherwise the most recently completed
+batch. All metrics are **gauges**, including `transactions_total`, which counts
+transactions in the selected batch, not lifetime payouts.
+
+| Metric (prefix `mina_payout_`) | Meaning |
+|---|---|
+| `epoch`, `status{status="..."}` | Selected epoch and status (one current status series) |
+| `active_batch`, `batch_available` | Whether an active batch / any selected batch exists |
+| `transactions_total` | Planned transactions in the selected batch |
+| `transactions_confirmed`, `progress_percent` | Estimated confirmations and percentage |
+| `next_transaction_position` | Next transaction awaiting confirmation, starting at 1; 0 when finished |
+| `wallet_nonce`, `wallet_inferred_nonce` | On-chain and inferred wallet nonces |
+| `wallet_pending_transactions`, `wallet_balance_mina` | Live pending count and balance |
+| `funding_remaining_mina` | Funding still required before signing; omitted after signing starts |
+| `last_completed_epoch`, `last_completed_timestamp_seconds` | Last completed batch and completion time |
+| `last_processed_epoch` | Wrapper watermark, including epochs with no transactions |
+| `daemon_synced` | Whether the queried daemon is synchronized |
+| `state_collection_success`, `wallet_collection_success` | Local state and live wallet collection health |
+| `metrics_collection_success`, `metrics_collection_timestamp_seconds` | Overall collection health and attempt time |
+
+Progress is `clamp(wallet nonce - batch start nonce, 0, transaction count)`.
+For 250 planned transactions, start nonce 500 and current nonce 542, the output
+is 42 estimated confirmations, 16.8% progress and next position 43. This assumes
+a dedicated wallet: consumed nonces are not independent verification of each
+recipient's payment. A 100% estimate does not replace the executor's final
+`COMPLETED_OK` checks. Completed batches retain 100% even if the live query fails.
+
+Before signing, progress is zero. Before any batch exists, status is `IDLE` and
+batch metrics are absent. Wallet metrics are absent until a wallet is known.
+On a failed or unsynchronized daemon query, live wallet and nonce-derived
+progress metrics are omitted rather than reused. Available local batch metrics
+remain visible; collection errors return exit code 1 and print to stderr.
+
+Writes use a temporary file and atomic replacement, following the
+[node_exporter textfile collector guidance](https://github.com/prometheus/node_exporter#textfile-collector).
+The output is readable by node_exporter (mode 644); a separate lock prevents
+overlapping collector runs. Enable node_exporter's
+`--collector.textfile.directory=/var/lib/node_exporter/textfile_collector`
+if it is not already configured.
+
+Useful Grafana queries (filter by `instance` when monitoring several machines):
+
+```promql
+mina_payout_progress_percent
+mina_payout_transactions_confirmed
+mina_payout_transactions_total
+mina_payout_status == 1
+```
+
+Monitor collection failures and cron freshness too. If writing the output file
+fails or cron stops, the old file may remain:
+
+```promql
+mina_payout_metrics_collection_success == 0
+time() - mina_payout_metrics_collection_timestamp_seconds > 180
+```
+
+A never-created output also needs an absence alert. End-to-end refresh latency
+includes the cron interval, Prometheus scrape interval and Grafana refresh.
