@@ -2612,29 +2612,35 @@ collector for a cron job on the payout machine. It needs Bash, Python 3,
 script; only this one file needs installing. It never starts a payout,
 loads private keys, or changes payout state.
 
-Install the script (example for user `thomas`):
+Install the script:
 
 ```bash
 sudo install -m 755 mina-payout-metrics.sh /var/lib/node_exporter/mina-payout-metrics.sh
 ```
 
 The existing `/var/lib/node_exporter/textfile_collector` directory must be
-writable by `thomas` and readable/traversable by node_exporter. Keep the
-private payout state permissions unchanged. Test as `thomas`:
+writable by the user running the payout automation and readable/traversable by
+node_exporter. Keep the private payout state permissions unchanged. Run the
+collector as that user, whose `$HOME` contains the engine installation:
 
 ```bash
 /var/lib/node_exporter/mina-payout-metrics.sh \
-  /home/thomas/mina-scripts/payouts/mina-pool-payout \
+  "$HOME/mina-scripts/payouts/mina-pool-payout" \
   /var/lib/node_exporter/textfile_collector/mina_payout.prom \
   http://127.0.0.1:3085/graphql
 cat /var/lib/node_exporter/textfile_collector/mina_payout.prom
 ```
 
-Add to **thomas's crontab** with `crontab -e`:
+Add to **the payout automation user's crontab** with `crontab -e`:
 
 ```cron
-* * * * * /var/lib/node_exporter/mina-payout-metrics.sh /home/thomas/mina-scripts/payouts/mina-pool-payout /var/lib/node_exporter/textfile_collector/mina_payout.prom http://127.0.0.1:3085/graphql
+* * * * * /var/lib/node_exporter/mina-payout-metrics.sh "$HOME/mina-scripts/payouts/mina-pool-payout" /var/lib/node_exporter/textfile_collector/mina_payout.prom http://127.0.0.1:3085/graphql
 ```
+
+`$HOME` is expanded for the user running the command or cron job. For an engine
+installed elsewhere, replace the first argument with its absolute path. The
+script installation and textfile directories shown here are examples; adapt
+them to your node_exporter setup.
 
 The three optional positional arguments are engine directory, output file,
 and GraphQL URL. Their defaults are `$HOME/mina-scripts/payouts/mina-pool-payout`,
